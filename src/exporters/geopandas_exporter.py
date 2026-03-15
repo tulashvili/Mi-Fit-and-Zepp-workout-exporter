@@ -7,7 +7,7 @@ from typing import List
 import geopandas as gpd
 from shapely.geometry import Point
 
-from src.api import WorkoutSummary
+from src.api import WorkoutDetail, WorkoutSummary
 from src.exporters.base_exporter import BaseExporter, ExportablePoint
 
 LOGGER = logging.getLogger(__name__)
@@ -34,6 +34,7 @@ class GeoPandasExporter(BaseExporter):
         output_file_path: Path,
         summary: WorkoutSummary,
         points: List[ExportablePoint],
+        detail: WorkoutDetail,
     ):
         track_date = datetime.utcfromtimestamp(
             int(summary.trackid)).isoformat()
@@ -50,6 +51,14 @@ class GeoPandasExporter(BaseExporter):
                     "cadence": point.cadence,
                     # Note: Point(lon, lat)
                     "geometry": Point(point.longitude, point.latitude),
+                    "user": detail.activity.get("user") if detail.activity else None,
+                    "device": detail.activity.get("device") if detail.activity else None,
+                    "activity_date": detail.activity.get("date") if detail.activity else None,
+                    "start_time": detail.activity.get("start_time") if detail.activity else None,
+                    "duration": detail.summary.get("duration") if detail.summary else None,
+                    "calories_kcal": detail.summary.get("calories_kcal") if detail.summary else None,
+                    "avg_bpm": detail.summary.get("heart_rate", {}).get("avg_bpm") if detail.summary and detail.summary.get("heart_rate") else None,
+                    "max_bpm": detail.summary.get("heart_rate", {}).get("max_bpm") if detail.summary and detail.summary.get("heart_rate") else None,
                 }
                 for point in points
             ]
@@ -83,6 +92,19 @@ class GeoPandasExporter(BaseExporter):
                 "duration_s": summary.run_time,
                 "avg_pace": summary.avg_pace,
                 "workout_type": summary.type,
+                "total_steps": summary.total_step,
+                "altitude_ascend": summary.altitude_ascend,
+                "altitude_descend": summary.altitude_descend,
+                "max_pace": summary.max_pace,
+                "min_pace": summary.min_pace,
+                "user": detail.activity.get("user") if detail.activity else None,
+                "device": detail.activity.get("device") if detail.activity else None,
+                "activity_date": detail.activity.get("date") if detail.activity else None,
+                "start_time": detail.activity.get("start_time") if detail.activity else None,
+                "duration": detail.summary.get("duration") if detail.summary else None,
+                "calories_kcal": detail.summary.get("calories_kcal") if detail.summary else None,
+                "avg_bpm": detail.summary.get("heart_rate", {}).get("avg_bpm") if detail.summary and detail.summary.get("heart_rate") else None,
+                "max_bpm": detail.summary.get("heart_rate", {}).get("max_bpm") if detail.summary and detail.summary.get("heart_rate") else None,
             }]
             df = pd.DataFrame(data)
             columns = [
@@ -98,6 +120,19 @@ class GeoPandasExporter(BaseExporter):
                 "duration_s",
                 "avg_pace",
                 "workout_type",
+                "total_steps",
+                "altitude_ascend",
+                "altitude_descend",
+                "max_pace",
+                "min_pace",
+                "user",
+                "device",
+                "activity_date",
+                "start_time",
+                "duration",
+                "calories_kcal",
+                "avg_bpm",
+                "max_bpm",
             ]
             df = df[columns]
 

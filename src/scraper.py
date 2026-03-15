@@ -55,11 +55,17 @@ class Scraper:
             detail = self.api.get_workout_detail(summary)
 
             points = parse_points(summary, detail.data)
-            if not points and not self.include_no_gps:
-                LOGGER.warning(
-                    f"Skipping workout {summary.trackid} because it has no points"
-                )
-                continue
+            if not points:
+                if not self.include_no_gps:
+                    LOGGER.warning(
+                        f"Skipping workout {summary.trackid} because it has no points"
+                    )
+                    continue
+                else:
+                    LOGGER.info(
+                        f"Detail for workout {summary.trackid} (no GPS): activity={detail.activity}, summary={detail.summary}, heart_rate_zones={detail.heart_rate_zones}")
+
+            track_id = int(summary.trackid)
 
             track_id = int(summary.trackid)
             file_name = datetime.fromtimestamp(track_id).strftime(
@@ -70,5 +76,5 @@ class Scraper:
             output_file_path.parent.mkdir(exist_ok=True)
             assert output_file_path.parent.exists(), "Couldn't create output folder"
 
-            self.exporter.export(output_file_path, summary, points)
+            self.exporter.export(output_file_path, summary, points, detail)
             LOGGER.info(f"Downloaded {output_file_path}")
