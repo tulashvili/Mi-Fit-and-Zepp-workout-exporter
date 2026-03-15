@@ -23,7 +23,8 @@ WORKOUT_TYPE_MAP = {
 
 def _map_workout_type(summary: WorkoutSummary) -> Optional[str]:
     if not (workout_type := WORKOUT_TYPE_MAP.get(summary.type)):
-        LOGGER.warning(f"Unhandled type for workout {summary.trackid}: {summary.type}")
+        LOGGER.warning(
+            f"Unhandled type for workout {summary.trackid}: {summary.type}")
 
     return workout_type
 
@@ -50,6 +51,21 @@ class GpxExporter(BaseExporter):
             fp.write(f"{ind}<metadata><time>{time}</time></metadata>\n")
             fp.write(f"{ind}<trk>\n")
             fp.write(f"{ind}{ind}<name>{time}</name>\n")
+            # Add description with workout metadata
+            desc_parts = []
+            if summary.dis:
+                desc_parts.append(f"Distance: {summary.dis} km")
+            if summary.calorie:
+                desc_parts.append(f"Calories: {summary.calorie}")
+            if summary.run_time:
+                desc_parts.append(f"Duration: {summary.run_time} s")
+            if summary.avg_pace:
+                desc_parts.append(f"Avg Pace: {summary.avg_pace}")
+            if summary.avg_heart_rate:
+                desc_parts.append(f"Avg HR: {summary.avg_heart_rate}")
+            if desc_parts:
+                desc = "; ".join(desc_parts)
+                fp.write(f"{ind}{ind}<desc>{desc}</desc>\n")
 
             if workout_type := _map_workout_type(summary):
                 fp.write(f"{ind}{ind}<type>{workout_type}</type>\n")
